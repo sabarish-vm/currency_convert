@@ -1,6 +1,9 @@
 # Currency converter
 
-Currency converter for CLI written in rust. The forex rates are obtained from <www.ecb.europa.eu> and stored locally. Forex rates are updated by ECB only once per day, therefore these are NOT LIVE exchange rates.
+Currency converter for CLI written in rust. The forex rates are obtained
+from [ecb.europa.eu](https://www.ecb.europa.eu) and stored locally. Forex rates
+are updated by ECB only once per day, therefore these are NOT LIVE
+exchange rates.
 
 ## Installation
 
