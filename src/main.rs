@@ -98,14 +98,25 @@ fn main() {
         None => panic!("Date key in the forex rate CSV file"),
     };
 
-    let matches = Command::new("myprog")
+    let matches = Command::new("curconv")
+        .version("1.0.0")
+        .author("Sabarish github.com/sabarish-vm")
+        .about("A simple currency converter to use from the terminal")
+        .override_usage(concat!(
+            "There are two modes \n\n1) Update mode :",
+            "To download the latest forex rates from www.ecb.europa.eu and store them locally\n\n",
+            "\t\t curconv -u (or) curconv --update \n\n",
+            "2) Conversion mode : To do forex conversions,\n\n",
+            "\t\t curconv AMOUNT CURRENCY1 --to CURRENCY2",
+        ))
         .arg(
             Arg::new("update")
                 .short('u')
+                .long("update")
                 .action(ArgAction::SetTrue)
                 .conflicts_with_all(["amount", "CUR1", "CUR2"]),
         )
-        .arg(Arg::new("amount").value_parser(clap::value_parser!(f64)))
+        .arg(Arg::new("AMOUNT").value_parser(clap::value_parser!(f64)))
         .arg(Arg::new("CUR1"))
         .arg(Arg::new("CUR2").short('t').long("to"))
         .get_matches();
@@ -113,11 +124,14 @@ fn main() {
     if upd {
         downloader(&zip_path);
         unzipper(&zip_path, &output_dir);
-        println!("Update successful");
+        let map2 = csv_parser(&csv_path);
+        let date2 = map2.get("Date").unwrap().get_string().unwrap();
+        println!("Updated to the forex rates as on {}", date2);
+        println!("The rates are updated by ECB once per day at 16:00 CET(CEST)");
         std::process::exit(0)
     }
     if let (Some(amount), Some(inpcur), Some(tocur)) = (
-        matches.get_one::<f64>("amount"),
+        matches.get_one::<f64>("AMOUNT"),
         matches.get_one::<String>("CUR1"),
         matches.get_one::<String>("CUR2"),
     ) {
