@@ -28,10 +28,16 @@ fn read_file_contents(path: &PathBuf) -> Result<Vec<String>, Box<dyn std::error:
     Ok(lines)
 }
 
-fn csv_parser(path: &PathBuf) -> HashMap<String, Value> {
+fn csv_parser(path: &PathBuf) -> (String, HashMap<String, Value>) {
     let contents = read_file_contents(path).unwrap();
     let headers: Vec<&str> = contents.get(0).unwrap().split(',').collect();
     let values: Vec<&str> = contents.get(1).unwrap().split(',').collect();
+    let currencies = contents
+        .get(0)
+        .unwrap()
+        .clone()
+        .replace("Date,", "")
+        .replace(',', "");
     let size = headers.len();
     let mut fxrates_hash: HashMap<String, Value> = HashMap::new();
     for index in 0..size {
@@ -45,7 +51,7 @@ fn csv_parser(path: &PathBuf) -> HashMap<String, Value> {
         fxrates_hash.insert(key, final_value);
         fxrates_hash.insert("EUR".to_string(), Value::Float(1.0));
     }
-    fxrates_hash
+    (currencies, fxrates_hash)
 }
 
 fn downloader(path: &PathBuf) {
@@ -70,13 +76,20 @@ fn unzipper(path: &PathBuf, output_dir: &PathBuf) {
     archive.extract(output_dir).unwrap();
 }
 
-fn converter(amt: &f64, from: &str, to: &str, map: &HashMap<String, Value>) {
+fn converter(amt: &f64, from: &str, to: &str, map: &HashMap<String, Value>, currencies: &String) {
     if let (Some(Value::Float(fac_from)), Some(Value::Float(fac_to))) = (map.get(from), map.get(to))
     {
         let res = amt * fac_to / fac_from;
         println!("{} {} = {} {}", amt, from, res, to);
     } else {
-        println!("One or both keys do not have a Float value.");
+        println!(
+            concat!(
+                "One or both currencies passed is not understood. ",
+                "Available currencies are :\n",
+                "{}"
+            ),
+            currencies.trim()
+        );
     }
 }
 
@@ -91,7 +104,7 @@ fn main() {
     }
     let zip_path = output_dir.join(Path::new("eurofxref.zip"));
     let csv_path = output_dir.join(Path::new("eurofxref.csv"));
-    let map = csv_parser(&csv_path);
+    let (currencies, map) = csv_parser(&csv_path);
 
     let date = match map.get("Date") {
         Some(x) => x.get_string().unwrap(),
@@ -114,17 +127,28 @@ fn main() {
                 .short('u')
                 .long("update")
                 .action(ArgAction::SetTrue)
-                .conflicts_with_all(["amount", "CUR1", "CUR2"]),
+                .conflicts_with_all(["AMOUNT", "CUR1", "CUR2"]),
         )
-        .arg(Arg::new("AMOUNT").value_parser(clap::value_parser!(f64)))
-        .arg(Arg::new("CUR1"))
-        .arg(Arg::new("CUR2").short('t').long("to"))
+        .arg(
+            Arg::new("AMOUNT")
+                .value_parser(clap::value_parser!(f64))
+                .required(true)
+                .index(1),
+        )
+        .arg(Arg::new("CUR1").required(true).index(2))
+        .arg(
+            Arg::new("CUR2")
+                .short('t')
+                .long("to")
+                .required(true)
+                .index(3),
+        )
         .get_matches();
     let upd = matches.get_flag("update");
     if upd {
         downloader(&zip_path);
         unzipper(&zip_path, &output_dir);
-        let map2 = csv_parser(&csv_path);
+        let (_, map2) = csv_parser(&csv_path);
         let date2 = map2.get("Date").unwrap().get_string().unwrap();
         println!("Updated to the forex rates as on {}", date2);
         println!("The rates are updated by ECB once per day at 16:00 CET(CEST)");
@@ -136,6 +160,9 @@ fn main() {
         matches.get_one::<String>("CUR2"),
     ) {
         println!("Using forex rates as on {}", date);
-        converter(amount, inpcur, tocur, &map)
+        converter(amount, inpcur, tocur, &map, &currencies)
+    } else {
+        println!("Missing args, please provide args as in the format\n \tcurconv AMOUNT CURRENCY1 --to CURRENCY2\n Use --help for more information");
+        std::process::exit(1)
     }
 }
