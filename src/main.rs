@@ -104,6 +104,11 @@ fn main() {
     }
     let zip_path = output_dir.join(Path::new("eurofxref.zip"));
     let csv_path = output_dir.join(Path::new("eurofxref.csv"));
+    if !csv_path.exists() {
+        downloader(&zip_path);
+        unzipper(&zip_path, &output_dir);
+    }
+    // Reading the file here needs a better alternative
     let (currencies, map) = csv_parser(&csv_path);
 
     let date = match map.get("Date") {
