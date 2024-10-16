@@ -2,6 +2,7 @@ name: Deploy
 
 on:
   push:
+    main
     tags:
       - "[0-9]+.[0-9]+.[0-9]+"
 
@@ -42,7 +43,7 @@ jobs:
 
       - name: Install OpenSSL on Linux
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install -y libssl-dev
+        run: sudo apt-get install -y libssl-dev pkg-config
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
