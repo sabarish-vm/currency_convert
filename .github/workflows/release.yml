@@ -28,6 +28,10 @@ jobs:
             os: macos-latest
             target: x86_64-apple-darwin
 
+          - build: windows
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -36,12 +40,17 @@ jobs:
         shell: bash
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
+      - name: Install OpenSSL on Linux
+        if: runner.os == 'ubuntu-latest'
+        run: sudo apt-get install -y libssl-dev
+
+      - name: Set OpenSSL environment variable on Linux
+        if: runner.os == 'ubuntu-latest'
+        run: echo "OPENSSL_DIR=/usr/lib/ssl" >> $GITHUB_ENV
+
       - name: Install Rust
-        # Or @nightly if you want
         uses: dtolnay/rust-toolchain@stable
-        # Arguments to pass in
         with:
-          # Make Rust compile to our target (defined in the matrix)
           targets: ${{ matrix.target }}
 
       - name: Build
