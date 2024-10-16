@@ -44,10 +44,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install -y libssl-dev
 
-      - name: Set OpenSSL environment variable on Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: echo "OPENSSL_DIR=/usr/lib/ssl" >> $GITHUB_ENV
-
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
