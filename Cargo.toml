@@ -9,3 +9,4 @@ dirs = "5.0.1"
 ripunzip = "2.0.0"
 curl = "0.4.47"
 clap = { version = "4.5.9", features = ["derive"] }
+openssl = { version = "0.10.67", features = ["vendored"] }
