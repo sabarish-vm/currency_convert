@@ -6,9 +6,7 @@ _curconv() {
     _arguments -C \
                "1: :->first" \
                "2: :->cmds" \
-               "3: :->to" \
-               "4: :->cmds" \
-               "*::arg:->args"
+               "3: :->cmds"
     case "$state" in
         first)
             if [[ "${words[CURRENT]}" =~ ^- ]] ; then

@@ -1,4 +1,5 @@
 use clap::{Arg, ArgAction, Command};
+use core::panic;
 use curl::easy::Easy;
 use std::collections::HashMap;
 use std::fs::{read_to_string, File};
@@ -6,6 +7,12 @@ use std::io::Write;
 use std::num::ParseFloatError;
 use std::path::{Path, PathBuf};
 use zip::ZipArchive;
+
+struct DataPath {
+    zip: PathBuf,
+    csv: PathBuf,
+    dir: PathBuf,
+}
 
 #[derive(Debug)]
 enum Value {
@@ -22,16 +29,42 @@ impl Value {
     }
 }
 
-fn read_file_contents(path: &PathBuf) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let string_content = read_to_string(path).unwrap();
+fn read_file_contents(paths: &DataPath) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let string_content = match read_to_string(&paths.csv) {
+        Ok(x) => x,
+        Err(e) => {
+            downloader(paths);
+            unzipper(paths);
+            panic!("Error occured in reading the data file : {}", e)
+        }
+    };
     let lines: Vec<String> = string_content.lines().map(|s| s.to_string()).collect();
     Ok(lines)
 }
 
-fn csv_parser(path: &PathBuf) -> (String, HashMap<String, Value>) {
-    let contents = read_file_contents(path).unwrap();
-    let headers: Vec<&str> = contents.get(0).unwrap().split(',').collect();
-    let values: Vec<&str> = contents.get(1).unwrap().split(',').collect();
+fn csv_parser(paths: &DataPath) -> (String, HashMap<String, Value>) {
+    let contents = read_file_contents(paths).unwrap();
+    let headers: Vec<&str> = match contents.get(0) {
+        Some(x) => x.split(',').collect(),
+        None => {
+            downloader(paths);
+            unzipper(paths);
+            panic!("\nRestoring data file... Please re-run the command\n");
+        }
+    };
+    let values: Vec<&str> = match contents.get(1) {
+        Some(x) => x.split(',').collect(),
+        None => {
+            downloader(paths);
+            unzipper(paths);
+            panic!("\nRestoring data file... Please re-run the command\n");
+        }
+    };
+    if headers.len() != values.len() {
+        downloader(paths);
+        unzipper(paths);
+        panic!("\nSomething is wrong with the data file. Restoring data file... Please re-run the command\n");
+    }
     let currencies = contents
         .get(0)
         .unwrap()
@@ -54,8 +87,8 @@ fn csv_parser(path: &PathBuf) -> (String, HashMap<String, Value>) {
     (currencies, fxrates_hash)
 }
 
-fn downloader(path: &PathBuf) {
-    let mut file = File::create(path).unwrap();
+fn downloader(paths: &DataPath) {
+    let mut file = File::create(&paths.zip).unwrap();
 
     let url = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref.zip";
     let mut easy = Easy::new();
@@ -70,10 +103,11 @@ fn downloader(path: &PathBuf) {
     transfer.perform().unwrap();
 }
 
-fn unzipper(path: &PathBuf, output_dir: &PathBuf) {
-    let file = File::open(path).unwrap();
-    let mut archive = ZipArchive::new(file).unwrap();
-    archive.extract(output_dir).unwrap();
+fn unzipper(paths: &DataPath) {
+    let file = File::open(&paths.zip).unwrap();
+    let mut archive = ZipArchive::new(file)
+        .unwrap_or_else(|x| panic!("\nProblems unzipping the downloaded file. {}\n", x));
+    archive.extract(&paths.dir).unwrap();
 }
 
 fn converter(amt: &f64, from: &str, to: &str, map: &HashMap<String, Value>, currencies: &String) {
@@ -104,16 +138,20 @@ fn main() {
     }
     let zip_path = output_dir.join(Path::new("eurofxref.zip"));
     let csv_path = output_dir.join(Path::new("eurofxref.csv"));
-    if !csv_path.exists() {
-        downloader(&zip_path);
-        unzipper(&zip_path, &output_dir);
+    let paths = DataPath {
+        zip: zip_path,
+        csv: csv_path,
+        dir: output_dir,
+    };
+    if !paths.csv.exists() {
+        downloader(&paths);
+        unzipper(&paths);
     }
-    // Reading the file here needs a better alternative
-    let (currencies, map) = csv_parser(&csv_path);
+    let (currencies, map) = csv_parser(&paths);
 
     let date = match map.get("Date") {
         Some(x) => x.get_string().unwrap(),
-        None => panic!("Date key in the forex rate CSV file"),
+        None => panic!("Date key not found in the forex rate data file"),
     };
 
     let matches = Command::new("curconv")
@@ -124,8 +162,8 @@ fn main() {
             "There are two modes \n\n1) Update mode :",
             "To download the latest forex rates from www.ecb.europa.eu and store them locally\n\n",
             "\t\t curconv -u (or) curconv --update \n\n",
-            "2) Conversion mode : To do forex conversions,\n\n",
-            "\t\t curconv AMOUNT CURRENCY1 --to CURRENCY2",
+            "2) Conversion mode : To do forex conversions from CURRENCY1 to CURRENCY2,\n\n",
+            "\t\t curconv AMOUNT CURRENCY1 CURRENCY2",
         ))
         .arg(
             Arg::new("update")
@@ -141,19 +179,13 @@ fn main() {
                 .index(1),
         )
         .arg(Arg::new("CUR1").required(true).index(2))
-        .arg(
-            Arg::new("CUR2")
-                .short('t')
-                .long("to")
-                .required(true)
-                .index(3),
-        )
+        .arg(Arg::new("CUR2").required(true).index(3))
         .get_matches();
     let upd = matches.get_flag("update");
     if upd {
-        downloader(&zip_path);
-        unzipper(&zip_path, &output_dir);
-        let (_, map2) = csv_parser(&csv_path);
+        downloader(&paths);
+        unzipper(&paths);
+        let (_, map2) = csv_parser(&paths);
         let date2 = map2.get("Date").unwrap().get_string().unwrap();
         println!("Updated to the forex rates as on {}", date2);
         println!("The rates are updated by ECB once per day at 16:00 CET(CEST)");
