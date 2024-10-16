@@ -2,19 +2,25 @@
 _curconv() {
     local line state
 
-    _arguments -s -S \
-    "(- *)"{-u,--update}"[Update the forex rates]" \
-    "(- *)"{-h,--help}"[Show list of command-line options]" \
 
     _arguments -C \
-               "1:Amount:"\
+               "1: :->first" \
                "2: :->cmds" \
                "3: :->to" \
                "4: :->cmds" \
                "*::arg:->args"
     case "$state" in
+        first)
+            if [[ "${words[CURRENT]}" =~ ^- ]] ; then
+                _values "curconv flags" \
+                        "(- *)"{-u,--update}"[Update the forex rates]" \
+                        "(- *)"{-h,--help}"[Show list of command-line options]"
+            else
+                _message "Enter amount to convert"
+            fi
+                    ;;
         cmds)
-            _values "Curconv command" \
+            _values "Currency" \
                     "AUD[Australian Dollar]"\
                     "BGN[Bulgarian Lev]"\
                     "BRL[Brazilian Real]"\
@@ -48,7 +54,7 @@ _curconv() {
                     "ZAR[South African Rand]"\
 
             ;;
-        to) 
+        to)
             _values "Target currency"\
                     "--to"\
             ;;
