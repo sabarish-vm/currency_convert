@@ -7,13 +7,17 @@ exchange rates.
 
 ## Installation
 
-Easy method is to cargo install the repo directly.
+The recommended method to install it is download the binary from the 
+[releases](https://github.com/sabarish-vm/currency_convert/releases/latest).
+This also ensures that you download the completion files for bash and zsh.
+If a release is not available for your system type, it can be cargo installed 
+directly.
 
 ```shell
 cargo install --git https://github.com/sabarish-vm/currency_convert.git
 ```
 
-Recommended method is to git clone the repo, and cargo build it.
+Alternative method is to git clone the repo, and cargo build it.
 This also gives access to the completion files for bash and zsh.
 
 ```shell
