@@ -155,7 +155,6 @@ fn main() {
     };
 
     let matches = Command::new("curconv")
-        .version("1.0.0")
         .author("Sabarish github.com/sabarish-vm")
         .about("A simple currency converter to use from the terminal")
         .override_usage(concat!(
