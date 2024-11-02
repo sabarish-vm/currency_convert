@@ -1,6 +1,6 @@
 [package]
 name = "curconv"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 
 [dependencies]
@@ -8,5 +8,5 @@ zip = "2.2.0"
 dirs = "5.0.1"
 ripunzip = "2.0.0"
 curl = "0.4.47"
-clap = { version = "4.5.9", features = ["derive"] }
+clap = { version = "4.5.9" }
 openssl = { version = "0.10.67", features = ["vendored"] }
