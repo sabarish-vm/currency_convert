@@ -1,4 +1,4 @@
-name: Deploy
+name: Release
 
 on:
   push:
@@ -28,6 +28,10 @@ jobs:
             os: macos-latest
             target: x86_64-apple-darwin
 
+          - build: macos
+            os: macos-latest
+            target: aarch64-apple-darwin
+
           - build: windows
             os: windows-latest
             target: x86_64-pc-windows-msvc
@@ -39,10 +43,6 @@ jobs:
       - name: Get the release version from the tag
         shell: bash
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-
-      - name: Install OpenSSL on Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install -y libssl-dev pkg-config
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
