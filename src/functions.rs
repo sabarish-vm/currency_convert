@@ -1,30 +1,35 @@
 use core::panic;
 use curl::easy::Easy;
 use std::collections::HashMap;
-use std::fs::{read_to_string, File};
+use std::fs::{File, read_to_string};
 use std::io::Write;
 use std::num::ParseFloatError;
 use zip::ZipArchive;
 
-use crate::structs::{DataPath, Value};
+use crate::data_strcuts::{DataPath, Value};
 
-pub fn read_file_contents(paths: &DataPath) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+pub fn read_file_contents(
+    paths: &DataPath,
+) -> Result<Vec<&'static str>, Box<dyn std::error::Error>> {
     let string_content = match read_to_string(paths.csv) {
-        Ok(x) => x,
+        Ok(x) => Box::leak(x.into_boxed_str()) as &str,
         Err(e) => {
             downloader(paths);
             unzipper(paths);
             panic!("Error occured in reading the data file : {}", e)
         }
     };
-    let lines: Vec<String> = string_content.lines().map(|s| s.to_string()).collect();
+    let lines: Vec<&'static str> = string_content
+        .lines()
+        .map(|s| Box::leak(s.to_string().into_boxed_str()) as &str)
+        .collect();
     Ok(lines)
 }
 
 pub fn csv_parser<'a>(
-    contents: &'a [String],
+    contents: &Vec<&'a str>,
     paths: &DataPath,
-) -> (String, HashMap<&'a str, Value<'a>>) {
+) -> (&'static str, HashMap<&'a str, Value<'a>>) {
     let headers: Vec<&str> = match contents.first() {
         Some(x) => x.split(',').collect(),
         None => {
@@ -44,14 +49,21 @@ pub fn csv_parser<'a>(
     if headers.len() != values.len() {
         downloader(paths);
         unzipper(paths);
-        panic!("\nSomething is wrong with the data file. Restoring data file... Please re-run the command\n");
+        panic!(
+            "\nSomething is wrong with the data file. Restoring data file... Please re-run the command\n"
+        );
     }
-    let currencies = contents
-        .first()
-        .unwrap()
-        .clone()
-        .replace("Date,", "")
-        .replace(',', "");
+    let currencies = Box::leak(
+        format!(
+            "EUR {}",
+            contents
+                .first()
+                .unwrap()
+                .replace("Date,", "")
+                .replace(',', "")
+        )
+        .into_boxed_str(),
+    ) as &str;
     let size = headers.len();
     let mut fxrates_hash: HashMap<&str, Value> = HashMap::new();
     for index in 0..size {
