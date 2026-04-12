@@ -3,14 +3,17 @@ _dothis_completions() {
     local cur prev opts
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD - 1]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     if [[ ${COMP_CWORD} -eq 1 ]]; then
-        COMPREPLY=($(compgen -W "-u --update" -- ${cur}))
+        COMPREPLY=($(compgen -W "-u --update -t --tui" -- ${cur}))
         return 0
     fi
 
     if [[ "${COMP_WORDS[1]}" == "-u" || "${COMP_WORDS[1]}" == "--update" ]]; then
+        return 0
+    fi
+    if [[ "${COMP_WORDS[1]}" == "-t" || "${COMP_WORDS[1]}" == "--tui" ]]; then
         return 0
     fi
 
