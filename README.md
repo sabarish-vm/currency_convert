@@ -1,16 +1,16 @@
 # Currency converter
 
-Currency converter for CLI written in rust. The forex rates are obtained
+Currency converter with TUI written in rust for the CLI. The forex rates are obtained
 from [ecb.europa.eu](https://www.ecb.europa.eu) and stored locally. Forex rates
 are updated by ECB only once per day, therefore these are NOT LIVE
 exchange rates.
 
 ## Installation
 
-The recommended method to install it is download the binary from the 
+The recommended method to install it is download the binary from the
 [releases](https://github.com/sabarish-vm/currency_convert/releases/latest).
 This also ensures that you download the completion files for bash and zsh.
-If a release is not available for your system type, it can be cargo installed 
+If a release is not available for your system type, it can be cargo installed
 directly.
 
 ```shell
