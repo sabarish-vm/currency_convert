@@ -1,6 +1,16 @@
 # Currency converter
 
-Currency converter with TUI written in rust for the CLI. The forex rates are obtained
+
+     ░███████  ░██    ░██ ░██░████  ░███████   ░███████  ░████████  ░██    ░██
+    ░██    ░██ ░██    ░██ ░███     ░██    ░██ ░██    ░██ ░██    ░██ ░██    ░██
+    ░██        ░██    ░██ ░██      ░██        ░██    ░██ ░██    ░██  ░██  ░██
+    ░██    ░██ ░██   ░███ ░██      ░██    ░██ ░██    ░██ ░██    ░██   ░██░██
+     ░███████   ░█████░██ ░██       ░███████   ░███████  ░██    ░██    ░███
+
+     █▓▒▒░░░ 𝔸 𝕟𝕠-𝕟𝕠𝕟𝕤𝕖𝕟𝕤𝕖 𝕔𝕦𝕣𝕣𝕖𝕟𝕔𝕪 𝕔𝕠𝕟𝕧𝕖𝕣𝕥𝕖𝕣 𝕗𝕠𝕣 𝕥𝕙𝕖 𝕥𝕖𝕣𝕞𝕚𝕟𝕒𝕝 𝕝𝕠𝕧𝕖𝕣𝕤 ░░░▒▒▓█
+
+
+curconv -- a currency converter with TUI written in rust for the CLI. The forex rates are obtained
 from [ecb.europa.eu](https://www.ecb.europa.eu) and stored locally. Forex rates
 are updated by ECB only once per day, therefore these are NOT LIVE
 exchange rates.
