@@ -35,3 +35,14 @@ git clone https://github.com/sabarish-vm/currency_convert.git
 cd currency_convert
 cargo build --release
 ```
+
+## Usage
+
+Information on usage can be found with `curconv --help` or `curconv -h`.
+The update needs to be done as needed by the user using `-u` or `--update` flags.
+The command can also be run without a TUI, by running,
+```shell
+    curconv 123 EUR INR    
+```
+For autocompletion of the currencies use the zsh/bash completion files provided in the release.
+For the tui mode, run `curconv -t` or `curconv --tui`.
