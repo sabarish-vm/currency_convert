@@ -48,7 +48,7 @@ pub struct App<'a> {
 impl<'a> App<'a> {
     pub fn new(curs: Vec<&'static str>, map: HashMap<&'static str, Value<'static>>) -> Self {
         let matches: Vec<(&str, i64)> = curs.iter().map(|s| (*s, 0)).collect();
-        let initial_index = matches.iter().position(|(x, i)| *x == "INR");
+        let initial_index = matches.iter().position(|(x, _)| *x == "INR");
         Self {
             amount: String::from("1"),
             result: String::from(""),
@@ -278,7 +278,7 @@ impl<'a> App<'a> {
             Constraint::Percentage(25),
         ])
         .split(main_vertical_split[0]);
-        frame.render_widget(HelpArea { app: self }, main_vertical_split[1]);
+        frame.render_widget(HelpArea {}, main_vertical_split[1]);
         frame.render_widget(InputArea { app: self }, chunks[0]);
 
         {
@@ -314,9 +314,7 @@ pub struct InputArea<'a> {
 pub struct OutputArea<'a> {
     app: &'a App<'a>,
 }
-pub struct HelpArea<'a> {
-    app: &'a App<'a>,
-}
+pub struct HelpArea {}
 
 impl<'a> Widget for OutputArea<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
@@ -368,9 +366,8 @@ impl<'a> Widget for InputArea<'a> {
     }
 }
 
-impl<'a> Widget for HelpArea<'a> {
+impl Widget for HelpArea {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        // --- COLUMN 1: AMOUNT ---
         Paragraph::new("Quit : <Esc> or <Ctrl+C>
 Navigate between columns : <Tab> or <Shift+Tab>
 Searching through currencies : Start typing the name of the currency going to the column, or select one by using <↑> or <↓>
