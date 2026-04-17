@@ -48,15 +48,16 @@ pub struct App<'a> {
 impl<'a> App<'a> {
     pub fn new(curs: Vec<&'static str>, map: HashMap<&'static str, Value<'static>>) -> Self {
         let matches: Vec<(&str, i64)> = curs.iter().map(|s| (*s, 0)).collect();
+        let initial_index = matches.iter().position(|(x, i)| *x == "INR");
         Self {
-            amount: String::from("0"),
+            amount: String::from("1"),
             result: String::from(""),
             exit: false,
             from_input: String::from(""),
             to_input: String::from(""),
             input_mode: InputMode::Amount,
             from_index: ListState::default().with_selected(Some(0)),
-            to_index: ListState::default().with_selected(Some(0)),
+            to_index: ListState::default().with_selected(initial_index),
             currencies: curs,
             matcher: SkimMatcherV2::default(),
             from_fuzzy_matches: matches.clone(),
@@ -265,14 +266,19 @@ impl<'a> App<'a> {
     }
 
     fn draw(&mut self, frame: &mut Frame) {
-        // 1. Create your main 4-column layout
+        let main_vertical_split = Layout::vertical([
+            Constraint::Min(8),    // Takes up all available space
+            Constraint::Length(8), // Fixed height for your bottom bar
+        ])
+        .split(frame.area());
         let chunks = Layout::horizontal([
             Constraint::Percentage(15),
             Constraint::Percentage(30), // From Column
             Constraint::Percentage(30), // To Column
             Constraint::Percentage(25),
         ])
-        .split(frame.area());
+        .split(main_vertical_split[0]);
+        frame.render_widget(HelpArea { app: self }, main_vertical_split[1]);
         frame.render_widget(InputArea { app: self }, chunks[0]);
 
         {
@@ -308,6 +314,10 @@ pub struct InputArea<'a> {
 pub struct OutputArea<'a> {
     app: &'a App<'a>,
 }
+pub struct HelpArea<'a> {
+    app: &'a App<'a>,
+}
+
 impl<'a> Widget for OutputArea<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Result ".bold());
@@ -358,4 +368,16 @@ impl<'a> Widget for InputArea<'a> {
     }
 }
 
-impl<'a> App<'a> {}
+impl<'a> Widget for HelpArea<'a> {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        // --- COLUMN 1: AMOUNT ---
+        Paragraph::new("Quit : <Esc> or <Ctrl+C>
+Navigate between columns : <Tab> or <Shift+Tab>
+Searching through currencies : Start typing the name of the currency going to the column, or select one by using <↑> or <↓>
+"
+        )
+            .block(Block::default().borders(Borders::ALL))
+            .wrap(Wrap { trim: true })
+            .render(area, buf);
+    }
+}
