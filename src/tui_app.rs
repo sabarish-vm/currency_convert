@@ -319,7 +319,6 @@ pub struct HelpArea {}
 impl<'a> Widget for OutputArea<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Result ".bold());
-        let instructions = Line::from(vec![" Quit <Esc | Ctrl+C> ".blue().bold()]);
 
         // --- COLUMN 1: AMOUNT ---
         let amount_style = if self.app.input_mode == InputMode::Amount {
@@ -333,7 +332,6 @@ impl<'a> Widget for OutputArea<'a> {
                 Block::default()
                     .borders(Borders::ALL)
                     .title(title.clone())
-                    .title_bottom(instructions.clone().centered())
                     .border_style(amount_style),
             )
             .wrap(Wrap { trim: true })
@@ -370,7 +368,7 @@ impl Widget for HelpArea {
     fn render(self, area: Rect, buf: &mut Buffer) {
         Paragraph::new("Quit : <Esc> or <Ctrl+C>
 Navigate between columns : <Tab> or <Shift+Tab>
-Searching through currencies : Start typing the name of the currency going to the column, or select one by using <↑> or <↓>
+Searching through currencies : Go to the respective column and filter the list by typing the name of the currency, or select one by using <↑> or <↓>
 "
         )
             .block(Block::default().borders(Borders::ALL))
